@@ -7,9 +7,11 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 public class AuditLogger {
     private final LinkedBlockingQueue<String> queue = new LinkedBlockingQueue<>();
+    private final ConcurrentLinkedDeque<String> recentLogs = new ConcurrentLinkedDeque<>();
     private final Thread worker;
     private volatile boolean running = true;
 
@@ -46,6 +48,14 @@ public class AuditLogger {
 
     public void log(String message) {
         queue.offer(message);
+        recentLogs.addFirst(message);
+        if (recentLogs.size() > 10) {
+            recentLogs.pollLast();
+        }
+    }
+
+    public List<String> getRecentLogs() {
+        return new ArrayList<>(recentLogs);
     }
 
     public void shutdown() {

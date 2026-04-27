@@ -14,14 +14,26 @@ Nexus Gateway is a high-performance, production-grade Layer 7 API Gateway built 
 - **🛡️ Token Bucket Rate Limiting**
   Strictly enforces API rate limits per client IP using a highly concurrent, thread-safe token bucket algorithm. Prevents abuse and ensures fair resource allocation across all consumers.
   
-- **⚖️ IP Hashing Load Balancer**
-  Distributes incoming traffic efficiently across available backend nodes. Ensures consistent routing and "sticky" sessions by hashing the client's IP address.
+- **⚖️ Weighted Round-Robin Load Balancer**
+  Distributes incoming traffic efficiently across available backend nodes based on configurable priority weights (e.g., `8002:w3`). Integrates tightly with the Circuit Breaker to seamlessly skip failing nodes.
   
 - **📊 Real-Time Telemetry Dashboard**
   Built-in, asynchronous observability suite. Monitor live request metrics, gateway health, and circuit breaker status directly from your browser.
   
 - **🗺️ Dynamic Path-Based Routing**
   Easily configurable routing rules managed via a lightweight `nexus.conf` configuration file.
+
+---
+
+## 🖥️ The Command Center (Dashboard Preview)
+
+The newly injected **Command Center** (`GET /dashboard`) is a premium, zero-dependency "Glassmorphism" SaaS UI built directly into the gateway.
+
+- **🎨 Premium Theme:** Deep slate gradients (`#13111C` to `#1A1625`) with frosted glass cards (`backdrop-filter: blur(12px)`), accented by vibrant purple (`#8B5CF6`) and alert red (`#ef4444`).
+- **📈 Vital Signs:** Live tracking of Uptime, Routed Requests, Blocked Attacks, and dynamic CSS-based visualizations for Compression Savings and Live Traffic.
+- **🗄️ Node Cluster:** Visual "Server Racks" that dynamically track node health and lock down into a `TRIPPED` state when the Circuit Breaker opens.
+- **🛡️ WAF Security Feed:** A scrolling, terminal-style log of gateway events with threat mitigation and a screen-flash animation whenever the Web Application Firewall detects a threat (SQLi/XSS).
+- **👤 Customizable Admin Avatar:** Personalize your dashboard by simply replacing the `admin_avatar.png` file in the root directory.
 
 ---
 
@@ -46,7 +58,7 @@ You can verify the Gateway's routing and load balancing by making HTTP GET reque
 - `http://localhost:8000/api` -> Load balanced across nodes 8002 & 8003
 - `http://localhost:8000/auth` -> Routed directly to node 8001
 
-*Tip: Try refreshing the `/api` endpoint multiple times from different devices to see the IP Hashing load balancer in action! If you exceed 5 requests quickly, the Token Bucket will rate-limit you.*
+*Tip: Try refreshing the `/api` endpoint multiple times from different devices to see the Weighted Round-Robin load balancer distribute traffic 3:1! If you exceed 5 requests quickly, the Token Bucket will rate-limit you. Try sending a malicious request (e.g., `/api?q=<script>`) to trigger the WAF and see the dashboard flash red!*
 
 ---
 

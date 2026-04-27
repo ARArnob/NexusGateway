@@ -10,6 +10,9 @@ public class TelemetryDashboard {
     
     private final AtomicLong requestsRouted = new AtomicLong(0);
     private final AtomicLong requestsBlocked = new AtomicLong(0);
+    private final AtomicLong wafBlocked = new AtomicLong(0);
+    private final AtomicLong bytesOriginal = new AtomicLong(0);
+    private final AtomicLong bytesCompressed = new AtomicLong(0);
     private final long startTime;
 
     public TelemetryDashboard(CircuitBreaker circuitBreaker) {
@@ -37,6 +40,25 @@ public class TelemetryDashboard {
     public void incrementBlocked() {
         requestsBlocked.incrementAndGet();
     }
+
+    public void incrementWafBlocked() {
+        wafBlocked.incrementAndGet();
+    }
+
+    public void addBytesOriginal(long bytes) {
+        bytesOriginal.addAndGet(bytes);
+    }
+
+    public void addBytesCompressed(long bytes) {
+        bytesCompressed.addAndGet(bytes);
+    }
+
+    public long getUptime() { return (System.currentTimeMillis() - startTime) / 1000; }
+    public long getRequestsRouted() { return requestsRouted.get(); }
+    public long getRequestsBlocked() { return requestsBlocked.get(); }
+    public long getWafBlocked() { return wafBlocked.get(); }
+    public long getBytesOriginal() { return bytesOriginal.get(); }
+    public long getBytesCompressed() { return bytesCompressed.get(); }
 
     private void printDashboard() {
         System.out.print("\033[H\033[2J");

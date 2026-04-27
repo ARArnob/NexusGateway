@@ -3,9 +3,11 @@ package nexus.routing;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Router {
     private final Map<String, List<String>> routes = new ConcurrentHashMap<>();
+    private final Map<String, AtomicInteger> roundRobinCounters = new ConcurrentHashMap<>();
     private final CircuitBreaker circuitBreaker;
 
     public Router(CircuitBreaker circuitBreaker) {
@@ -41,9 +43,8 @@ public class Router {
             return null;
         }
 
-        // Consistent IP Hashing
-        int hash = clientIp.hashCode() & 0x7FFFFFFF;
-        int startIndex = hash % nodes.size();
+        AtomicInteger counter = roundRobinCounters.computeIfAbsent(bestMatch, k -> new AtomicInteger(0));
+        int startIndex = (counter.getAndIncrement() & 0x7FFFFFFF) % nodes.size();
 
         // Find an available node using CircuitBreaker
         for (int i = 0; i < nodes.size(); i++) {

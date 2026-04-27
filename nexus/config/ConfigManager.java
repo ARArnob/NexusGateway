@@ -68,7 +68,16 @@ public class ConfigManager {
                     String[] ports = props.getProperty(key).split(",");
                     List<String> nodes = new ArrayList<>();
                     for (String portStr : ports) {
-                        nodes.add("localhost:" + portStr.trim());
+                        portStr = portStr.trim();
+                        int weight = 1;
+                        if (portStr.contains(":w")) {
+                            String[] parts = portStr.split(":w");
+                            portStr = parts[0];
+                            weight = Integer.parseInt(parts[1]);
+                        }
+                        for (int i = 0; i < weight; i++) {
+                            nodes.add("localhost:" + portStr);
+                        }
                     }
                     newRoutes.put(path, nodes);
                 }
