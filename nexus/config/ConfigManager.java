@@ -22,8 +22,16 @@ public class ConfigManager {
 
         worker = new Thread(() -> {
             try {
+                Path configPath = Paths.get("nexus.conf").toAbsolutePath();
+                Path configDir = configPath.getParent();
                 WatchService watchService = FileSystems.getDefault().newWatchService();
-                Paths.get(".").register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
+                
+                try {
+                    configDir.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
+                } catch (IOException e) {
+                    System.err.println("[ConfigManager] CRITICAL: Directory unreadable. Hot-reload disabled. Reason: " + e.getMessage());
+                    return;
+                }
                 
                 while (running) {
                     WatchKey key;
@@ -36,7 +44,7 @@ public class ConfigManager {
                     
                     for (WatchEvent<?> event : key.pollEvents()) {
                         Path changed = (Path) event.context();
-                        if (changed.toString().equals("nexus.conf")) {
+                        if (changed.getFileName().toString().equals("nexus.conf")) {
                             System.out.println("[ConfigManager] Detected changes in nexus.conf, reloading...");
                             loadConfig();
                         }
