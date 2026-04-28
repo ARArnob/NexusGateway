@@ -2,75 +2,120 @@
 
 **Enterprise L7 API Gateway Infrastructure**
 
-Nexus Gateway is a high-performance, production-grade Layer 7 API Gateway built entirely from scratch using pure Java standard libraries. It acts as a robust entry point for microservices, providing advanced traffic management, security, and observability with zero external dependencies.
+Nexus Gateway is a high-performance, production-grade Layer 7 API Gateway built entirely from scratch using pure Java standard libraries. It acts as a robust entry point for a multi-service microservice cluster, providing advanced traffic management, security, and real-time observability with **zero external dependencies**.
 
 ---
 
 ## ✨ Features
 
 - **⚡ Circuit Breaker Pattern**
-  Protects upstream backend services by continuously monitoring error rates. Automatically halts traffic to failing nodes to prevent cascading failures, enabling self-healing and rapid fault recovery.
-  
+  Protects upstream backend services by continuously monitoring error rates. Automatically halts traffic to failing nodes to prevent cascading failures, with self-healing via a configurable `HALF_OPEN` recovery probe before fully restoring a node.
+
 - **🛡️ Token Bucket Rate Limiting**
-  Strictly enforces API rate limits per client IP using a highly concurrent, thread-safe token bucket algorithm. Prevents abuse and ensures fair resource allocation across all consumers.
-  
+  Strictly enforces API rate limits per client IP using a highly concurrent, thread-safe token bucket algorithm. Prevents abuse and ensures fair resource allocation across all consumers. Configurable at runtime via `nexus.conf`.
+
 - **⚖️ Weighted Round-Robin Load Balancer**
-  Distributes incoming traffic efficiently across available backend nodes based on configurable priority weights (e.g., `8002:w3`). Integrates tightly with the Circuit Breaker to seamlessly skip failing nodes.
-  
+  Distributes incoming traffic across available backend nodes based on configurable priority weights (e.g., `8002:w2`). Integrates tightly with the Circuit Breaker to seamlessly skip failing nodes in real time.
+
 - **📊 Real-Time Telemetry Dashboard**
-  Built-in, asynchronous observability suite. Monitor live request metrics, gateway health, and circuit breaker status directly from your browser.
-  
+  Built-in, asynchronous observability suite powered by a premium Glassmorphism UI. Monitor live request metrics, gateway health, circuit breaker states, and WAF security events directly from your browser.
+
 - **🗺️ Dynamic Path-Based Routing**
-  Easily configurable routing rules managed via a lightweight `nexus.conf` configuration file.
+  Configurable multi-pool routing rules managed via `nexus.conf`. Supports granular path prefixes (`/auth`, `/api/users`, `/api/payments`) with per-pool weighted backends.
+
+- **🔥 Live Hot-Reload**
+  Configuration changes in `nexus.conf` are automatically detected and applied to the gateway at runtime via a hardened `WatchService` integration — no restart required.
+
+- **📋 Centralized Audit Logging**
+  A unified `AuditLogger` is injected into all core components (`Gateway`, `ClientHandler`, `ConfigManager`), funneling structured operational events into a single, synchronized, tamper-evident audit stream.
+
+- **⚡ Zero-Allocation I/O Pipeline**
+  Static assets (dashboard HTML, favicon) are served via direct `OutputStream` byte-stream writes, entirely bypassing Java `String` instantiation to minimize GC pressure on hot paths.
 
 ---
 
 ## 🖥️ The Command Center (Dashboard Preview)
 
-The newly injected **Command Center** (`GET /dashboard`) is a premium, zero-dependency "Glassmorphism" SaaS UI built directly into the gateway.
+The built-in **Command Center** (`GET /dashboard`) is a premium, zero-dependency Glassmorphism SaaS UI served directly by the gateway.
 
-- **🎨 Premium Theme:** Deep slate gradients (`#13111C` to `#1A1625`) with frosted glass cards (`backdrop-filter: blur(12px)`), accented by vibrant purple (`#8B5CF6`) and alert red (`#ef4444`).
-- **📱 Fully Responsive:** The dashboard seamlessly adapts to mobile and desktop displays using fluid CSS Grid layouts and viewport-relative scaling.
-- **📈 Vital Signs:** Live tracking of Uptime, Routed Requests, Blocked Attacks, and dynamic CSS-based visualizations for Compression Savings and Live Traffic powered by a fortified, asynchronous telemetry stream.
-- **🗄️ Node Cluster:** Visual "Server Racks" that dynamically track node health and lock down into a `TRIPPED` state when the Circuit Breaker opens.
-- **🛡️ WAF Security Feed:** A scrolling, terminal-style log of gateway events with threat mitigation and a screen-flash animation whenever the Web Application Firewall detects a threat (SQLi/XSS).
-- **👤 Customizable Admin Avatar:** Personalize your dashboard by simply replacing the `admin_avatar.png` file in the root directory.
+- **🎨 Premium Theme:** Deep slate gradients (`#13111C` → `#1A1625`) with frosted glass cards (`backdrop-filter: blur(12px)`), accented by vibrant purple (`#8B5CF6`) and alert red (`#ef4444`).
+- **📱 Fully Responsive:** Seamlessly adapts to mobile and desktop using fluid CSS Grid and viewport-relative scaling.
+- **📈 Vital Signs:** Live tracking of Uptime, Routed Requests, Blocked Attacks, Compression Savings, and Live Traffic via a fortified asynchronous telemetry stream.
+- **🗄️ Node Cluster:** Visual "Server Racks" that dynamically reflect node health and lock down into a `TRIPPED` state when the Circuit Breaker opens.
+- **🛡️ WAF Security Feed:** A scrolling, terminal-style log of gateway events with a screen-flash animation whenever the Web Application Firewall detects a threat (SQLi/XSS).
+- **👤 Customizable Admin Avatar:** Replace `admin_avatar.png` in the root directory to personalize your dashboard.
 
 ---
 
 ## 🚀 Quick Start
 
-Getting the infrastructure up and running is incredibly simple.
+### 1. Boot the Full Microservice Cluster
 
-### 1. Boot Up the Microservice Cluster
-Simply double-click the **`start_all.bat`** file from your File Explorer (or run `.\start_all.bat` in your terminal). 
-This script will automatically spin up:
-- The main **Nexus Gateway** on port `8000`
-- **6 Backend Nodes** (Ports 8001-8006), organized into high-availability service pools:
-  - **Auth Service:** Nodes 8001, 8006
-  - **User Service:** Nodes 8002, 8003
-  - **Payment Service:** Nodes 8004, 8005
+Double-click **`start_all.bat`** or run `.\start_all.bat` in your terminal.
+
+This script automatically spins up **7 processes** organized into three HA service pools:
+
+| Service Pool      | Nodes        | Weights |
+|-------------------|--------------|---------|
+| Auth Service      | 8001, 8006   | w1, w1  |
+| User Service      | 8002, 8003   | w2, w1  |
+| Payment Service   | 8004, 8005   | w3, w1  |
+| **Nexus Gateway** | **8000**     | —       |
 
 ### 2. Access the Telemetry Dashboard
-Once the servers are online, open your web browser and navigate to the built-in observability UI:
+
+Open your browser and navigate to:
+
 > **[http://localhost:8000/dashboard](http://localhost:8000/dashboard)**
 
-Here you can monitor live traffic metrics and the operational status of the gateway.
-
 ### 3. Test the API Endpoints
-You can verify the Gateway's routing and load balancing by making HTTP GET requests to the configured endpoints. The backend nodes actively simulate real microservices, returning context-aware JSON responses!
-- `http://localhost:8000/api/users` -> Load balanced across nodes 8002 & 8003
-- `http://localhost:8000/auth` -> Routed to nodes 8001 & 8006
-- `http://localhost:8000/api/payments` -> Routed to nodes 8004 & 8005
 
-*Tip: Try refreshing an endpoint multiple times from different devices to see the Weighted Round-Robin load balancer distribute traffic! If you exceed the rate limits quickly, the Token Bucket will block you. Try sending a malicious request (e.g., `/api?q=<script>`) to trigger the WAF and see the dashboard flash red!*
+| Endpoint | Routed To | Behaviour |
+|---|---|---|
+| `GET /auth` | Nodes 8001, 8006 | Round-robin, equal weight |
+| `GET /api/users` | Nodes 8002, 8003 | 2:1 weighted towards 8002 |
+| `GET /api/payments` | Nodes 8004, 8005 | 3:1 weighted towards 8004 |
+
+> 💡 **Tips:**
+> - Refresh an endpoint repeatedly to observe weighted load balancing in action.
+> - Exceed the rate limit quickly to trigger the Token Bucket blocker.
+> - Send a malicious request (e.g., `/api?q=<script>`) to trigger the WAF and see the dashboard flash red.
+> - Edit `nexus.conf` while the gateway is running to test live hot-reload — changes apply instantly.
+
+---
+
+## 🗂️ Project Structure
+
+```
+Nexus Gateway/
+├── nexus/
+│   ├── core/
+│   │   ├── Gateway.java          # Main server: accepts connections, routes requests
+│   │   ├── ClientHandler.java    # Per-request handler with zero-allocation I/O
+│   │   └── BackendNode.java      # Simulated microservice backend
+│   ├── routing/
+│   │   └── Router.java           # Weighted round-robin load balancer + circuit breaker
+│   ├── security/
+│   │   └── RateLimiter.java      # Thread-safe token bucket rate limiter
+│   ├── config/
+│   │   └── ConfigManager.java    # Hot-reload config watcher with AuditLogger injection
+│   └── telemetry/
+│       ├── TelemetryDashboard.java # Live metrics engine
+│       └── AuditLogger.java        # Centralized, synchronized audit stream
+├── dashboard.html                # External Glassmorphism UI (hot-reloadable)
+├── nexus.conf                    # Runtime configuration (routes + rate limits)
+├── start_all.bat                 # One-click cluster launcher
+└── admin_avatar.png              # Customizable dashboard avatar
+```
 
 ---
 
 ## 🛠️ Architecture Highlights
-- **100% Native Java 15+:** Built utilizing pure standard libraries (Text Blocks, NIO, Concurrent Collections) without Spring, Netty, or any third-party dependencies.
-- **Zero-Allocation Data Pipeline:** Extracted static UI assets and natively overloaded byte-stream endpoints entirely bypass Java String instantiation overhead to maximize garbage collection efficiency.
-- **Centralized Observability:** Fully decoupled UI, telemetry, and hot-reload components dynamically log into a master, synchronized audit stream.
-- **Bulletproof Hot-Reload:** Dynamic configuration updates via `nexus.conf` using hardened `WatchService` integration with strict pathing.
-- **Highly Concurrent:** Asynchronous, multi-threaded request handling utilizing robust thread pools.
-- **Modular Design:** Clean separation of routing, security, configuration, and telemetry components.
+
+- **100% Native Java 15+** — Built on pure standard libraries (Text Blocks, NIO, `java.util.concurrent`) with no Spring, Netty, or third-party dependencies.
+- **Zero-Allocation Data Pipeline** — Static assets served via direct byte-stream writes, entirely bypassing `String` instantiation to minimize GC pressure.
+- **Centralized Observability** — `AuditLogger` injected into `Gateway`, `ClientHandler`, and `ConfigManager` to funnel all operational events into a single synchronized audit stream.
+- **Hardened Hot-Reload** — `WatchService`-based config watcher with strict path resolution and graceful error recovery via `AuditLogger`.
+- **Circuit Breaker with Half-Open Recovery** — Three-state (`CLOSED` → `OPEN` → `HALF_OPEN`) fault isolation with configurable failure thresholds and recovery probing.
+- **Highly Concurrent** — Asynchronous, multi-threaded request handling via `ExecutorService` thread pools with daemon config-watcher threads.
+- **Modular Design** — Clean package-level separation of routing, security, configuration, telemetry, and core concerns.
