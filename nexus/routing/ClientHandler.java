@@ -48,7 +48,6 @@ public class ClientHandler implements Runnable {
             String[] parts = firstLine.split(" ");
             if (parts.length < 2) return;
 
-            String method = parts[0];
             String rawPath = parts[1];
             String decodedPath;
             try {
