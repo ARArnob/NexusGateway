@@ -262,7 +262,7 @@ public class ClientHandler implements Runnable {
             "                document.getElementById('circProg').style.background = `conic-gradient(var(--accent-purple) ${pct}%, rgba(255,255,255,0.05) 0)`;\n" +
             "                if(data.wafBlocked > lastWaf && lastWaf !== 0) { let el = document.getElementById('wafFlash'); el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); }\n" +
             "                lastWaf = data.wafBlocked;\n" +
-            "                let nodesHtml = ''; for(let [node, status] of Object.entries(data.nodes)) { let isTripped = status === 'OPEN'; let clz = isTripped ? 'rack-tripped' : 'rack-healthy'; let lblClz = isTripped ? 'bg-red' : 'bg-purple'; let lbl = isTripped ? 'TRIPPED' : 'ONLINE'; nodesHtml += `<div class='server-rack ${clz}'><div style='font-family:monospace'>${node}</div><div class='status-badge ${lblClz}'>${lbl}</div></div>`; }\n" +
+            "                let nodesHtml = ''; for(let [node, status] of Object.entries(data.nodes)) { let isTripped = status !== 'CLOSED'; let clz = isTripped ? 'rack-tripped' : 'rack-healthy'; let lblClz = isTripped ? 'bg-red' : 'bg-purple'; let lbl = isTripped ? 'TRIPPED' : 'ONLINE'; nodesHtml += `<div class='server-rack ${clz}'><div style='font-family:monospace'>${node}</div><div class='status-badge ${lblClz}'>${lbl}</div></div>`; }\n" +
             "                document.getElementById('nodes').innerHTML = nodesHtml;\n" +
             "                document.getElementById('logs').innerHTML = data.logs.join('<br/>');\n" +
             "            });\n" +
