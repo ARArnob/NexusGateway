@@ -2,6 +2,7 @@ package nexus.config;
 
 import nexus.routing.Router;
 import nexus.security.RateLimiter;
+import nexus.telemetry.AuditLogger;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -14,7 +15,7 @@ public class ConfigManager {
     private final Thread worker;
     private volatile boolean running = true;
 
-    public ConfigManager(Router router, RateLimiter rateLimiter) {
+    public ConfigManager(Router router, RateLimiter rateLimiter, AuditLogger auditLogger) {
         this.router = router;
         this.rateLimiter = rateLimiter;
         
@@ -29,7 +30,7 @@ public class ConfigManager {
                 try {
                     configDir.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
                 } catch (IOException e) {
-                    System.err.println("[ConfigManager] CRITICAL: Directory unreadable. Hot-reload disabled. Reason: " + e.getMessage());
+                    auditLogger.log("CRITICAL | ConfigManager | Directory unreadable. Hot-reload disabled.");
                     return;
                 }
                 

@@ -69,6 +69,8 @@ You can verify the Gateway's routing and load balancing by making HTTP GET reque
 
 ## 🛠️ Architecture Highlights
 - **100% Native Java 15+:** Built utilizing pure standard libraries (Text Blocks, NIO, Concurrent Collections) without Spring, Netty, or any third-party dependencies.
+- **Zero-Allocation Data Pipeline:** Extracted static UI assets and natively overloaded byte-stream endpoints entirely bypass Java String instantiation overhead to maximize garbage collection efficiency.
+- **Centralized Observability:** Fully decoupled UI, telemetry, and hot-reload components dynamically log into a master, synchronized audit stream.
 - **Bulletproof Hot-Reload:** Dynamic configuration updates via `nexus.conf` using hardened `WatchService` integration with strict pathing.
 - **Highly Concurrent:** Asynchronous, multi-threaded request handling utilizing robust thread pools.
 - **Modular Design:** Clean separation of routing, security, configuration, and telemetry components.
