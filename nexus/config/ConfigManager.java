@@ -18,7 +18,7 @@ public class ConfigManager {
     public ConfigManager(Router router, RateLimiter rateLimiter, AuditLogger auditLogger) {
         this.router = router;
         this.rateLimiter = rateLimiter;
-        
+
         loadConfig();
 
         worker = new Thread(() -> {
@@ -26,14 +26,16 @@ public class ConfigManager {
                 Path configPath = Paths.get("nexus.conf").toAbsolutePath();
                 Path configDir = configPath.getParent();
                 WatchService watchService = FileSystems.getDefault().newWatchService();
-                
+
                 try {
-                    configDir.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
+                    configDir.register(watchService,
+                            StandardWatchEventKinds.ENTRY_MODIFY,
+                            StandardWatchEventKinds.ENTRY_CREATE);
                 } catch (IOException e) {
                     auditLogger.log("CRITICAL | ConfigManager | Directory unreadable. Hot-reload disabled.");
                     return;
                 }
-                
+
                 while (running) {
                     WatchKey key;
                     try {
@@ -42,7 +44,7 @@ public class ConfigManager {
                         Thread.currentThread().interrupt();
                         break;
                     }
-                    
+
                     for (WatchEvent<?> event : key.pollEvents()) {
                         Path changed = (Path) event.context();
                         if (changed.getFileName().toString().equals("nexus.conf")) {
@@ -64,12 +66,12 @@ public class ConfigManager {
         Properties props = new Properties();
         try (FileInputStream in = new FileInputStream("nexus.conf")) {
             props.load(in);
-            
+
             if (props.containsKey("rate.limit")) {
                 int limit = Integer.parseInt(props.getProperty("rate.limit"));
                 rateLimiter.setMaxTokens(limit);
             }
-            
+
             Map<String, List<String>> newRoutes = new HashMap<>();
             for (String key : props.stringPropertyNames()) {
                 if (key.startsWith("route.")) {
@@ -92,7 +94,7 @@ public class ConfigManager {
                 }
             }
             router.updateRoutes(newRoutes);
-            
+
         } catch (Exception e) {
             System.err.println("Failed to load config: " + e.getMessage());
         }
