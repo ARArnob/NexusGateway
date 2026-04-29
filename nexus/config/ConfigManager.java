@@ -3,6 +3,7 @@ package nexus.config;
 import nexus.routing.Router;
 import nexus.security.RateLimiter;
 import nexus.telemetry.AuditLogger;
+import nexus.telemetry.TelemetryDashboard;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -15,7 +16,8 @@ public class ConfigManager {
     private final Thread worker;
     private volatile boolean running = true;
 
-    public ConfigManager(Router router, RateLimiter rateLimiter, AuditLogger auditLogger) {
+    public ConfigManager(Router router, RateLimiter rateLimiter, AuditLogger auditLogger,
+            TelemetryDashboard telemetryDashboard) {
         this.router = router;
         this.rateLimiter = rateLimiter;
 
@@ -48,8 +50,8 @@ public class ConfigManager {
                     for (WatchEvent<?> event : key.pollEvents()) {
                         Path changed = (Path) event.context();
                         if (changed.getFileName().toString().equals("nexus.conf")) {
-                            System.out.println("[ConfigManager] Detected changes in nexus.conf, reloading...");
                             loadConfig();
+                            telemetryDashboard.setSystemEvent("Reloaded nexus.conf at " + java.time.LocalTime.now());
                         }
                     }
                     key.reset();

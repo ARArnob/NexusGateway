@@ -24,7 +24,7 @@ public class Gateway {
         RateLimiter rateLimiter = new RateLimiter(5);
         AuditLogger auditLogger = new AuditLogger();
         TelemetryDashboard telemetryDashboard = new TelemetryDashboard(circuitBreaker);
-        ConfigManager configManager = new ConfigManager(router, rateLimiter, auditLogger);
+        ConfigManager configManager = new ConfigManager(router, rateLimiter, auditLogger, telemetryDashboard);
 
         ExecutorService threadPool = Executors.newCachedThreadPool();
 

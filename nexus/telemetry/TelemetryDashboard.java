@@ -14,6 +14,7 @@ public class TelemetryDashboard {
     private final AtomicLong bytesOriginal = new AtomicLong(0);
     private final AtomicLong bytesCompressed = new AtomicLong(0);
     private final long startTime;
+    private volatile String lastSystemEvent = "System Booted";
 
     public TelemetryDashboard(CircuitBreaker circuitBreaker) {
         this.circuitBreaker = circuitBreaker;
@@ -60,6 +61,11 @@ public class TelemetryDashboard {
     public long getBytesOriginal() { return bytesOriginal.get(); }
     public long getBytesCompressed() { return bytesCompressed.get(); }
 
+    public void setSystemEvent(String event) {
+        this.lastSystemEvent = event;
+        printDashboard();
+    }
+
     private void printDashboard() {
         System.out.print("\033[H\033[2J");
         System.out.flush();
@@ -72,6 +78,7 @@ public class TelemetryDashboard {
         System.out.println("Requests Routed  : " + requestsRouted.get());
         System.out.println("Requests Blocked : " + requestsBlocked.get());
         System.out.println("Node Status      : " + circuitBreaker.getDashboardStatus());
+        System.out.println("Last Event       : " + lastSystemEvent);
         System.out.println("=========================================");
     }
 
