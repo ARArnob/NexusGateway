@@ -16,19 +16,39 @@ public class BackendNode {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             System.out.println("BackendNode started on port " + port);
             while (true) {
-                try (Socket socket = serverSocket.accept();
-                     InputStream in = socket.getInputStream();
-                     OutputStream out = socket.getOutputStream()) {
+                try (Socket clientSocket = serverSocket.accept();
+                     InputStream in = clientSocket.getInputStream();
+                     OutputStream socketOut = clientSocket.getOutputStream()) {
                      
                     byte[] buffer = new byte[8192];
                     int read = in.read(buffer);
                     if (read > 0) {
-                        String response = "HTTP/1.1 200 OK\r\n" +
-                                          "Content-Type: text/plain\r\n" +
-                                          "Connection: close\r\n\r\n" +
-                                          "Served by Node " + port + "\n";
-                        out.write(response.getBytes(StandardCharsets.UTF_8));
-                        out.flush();
+                        StringBuilder jsonBuilder = new StringBuilder();
+                        jsonBuilder.append("[\n");
+                        for (int i = 1; i <= 200; i++) {
+                            jsonBuilder.append("  {\n")
+                                       .append("    \"id\": \"USR-").append(i).append("\",\n")
+                                       .append("    \"status\": \"active\",\n")
+                                       .append("    \"node_source\": \"localhost:").append(port).append("\",\n")
+                                       .append("    \"timestamp\": \"").append(System.currentTimeMillis()).append("\"\n")
+                                       .append("  }");
+                            if (i < 500) jsonBuilder.append(",");
+                            jsonBuilder.append("\n");
+                        }
+                        jsonBuilder.append("]");
+
+                        String jsonResponse = jsonBuilder.toString();
+                        byte[] jsonBytes = jsonResponse.getBytes(StandardCharsets.UTF_8);
+
+                        String headers = "HTTP/1.1 200 OK\r\n" +
+                                         "Content-Type: application/json\r\n" +
+                                         "Content-Length: " + jsonBytes.length + "\r\n" +
+                                         "Connection: close\r\n\r\n";
+                        byte[] headerBytes = headers.getBytes(StandardCharsets.UTF_8);
+
+                        socketOut.write(headerBytes);
+                        socketOut.write(jsonBytes);
+                        socketOut.flush();
                     }
                 } catch (Exception e) {
                     System.err.println("Error handling connection: " + e.getMessage());

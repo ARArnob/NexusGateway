@@ -224,8 +224,9 @@ public class ClientHandler implements Runnable {
     }
 
     private void sendResponse(OutputStream out, String contentType, byte[] bodyBytes, boolean useGzip) throws Exception {
+        boolean shouldCompress = useGzip && bodyBytes.length > 1024;
         byte[] finalBody;
-        if (useGzip) {
+        if (shouldCompress) {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             try (GZIPOutputStream gzipOut = new GZIPOutputStream(baos)) {
                 gzipOut.write(bodyBytes);
@@ -242,7 +243,7 @@ public class ClientHandler implements Runnable {
                 "Content-Type: " + contentType + "\r\n" +
                 "Content-Length: " + finalBody.length + "\r\n" +
                 "Connection: close\r\n";
-        if (useGzip) {
+        if (shouldCompress) {
             headers += "Content-Encoding: gzip\r\n";
         }
         headers += "\r\n";
